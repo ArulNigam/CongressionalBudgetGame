@@ -119,7 +119,8 @@ def print_attributes(constituents, issue):
     print()
 
 
-def turn(to_play, tax_rate, tax_revenue, spending_level, constituents_list, constituents_who_care, year, total_income):
+def turn(to_play, tax_rate, tax_revenue, spending_level, constituents_list, constituents_who_care, year, total_income, debt):
+    initial_debt = debt
     scenarios_done = 0
     while scenarios_done < 2 and len(to_play) > 0:
         temp = to_play.pop(0)
@@ -162,15 +163,17 @@ def turn(to_play, tax_rate, tax_revenue, spending_level, constituents_list, cons
                     else:
                         constituent.happiness -= cost
             if temp_answer2 == "B":
-                spending_level += cost
+                spending_level += cost * 0.01 * total_income
+                debt += cost * 0.01 * total_income
                 for constituent in constituents_list:
                     if constituent in constituents_who_care[issue]:
                         constituent.happiness += benefit
-                    else:
-                        constituent.happiness -= cost
+        if debt > initial_debt:
+            for constituent in constituents_list:
+                constituent.happiness -= 2
         scenarios_done += 1
         print("--------------------------------------------------------------------------------------------------")
-    return get_approval(constituents_list), to_play, tax_rate, tax_revenue, spending_level, year + 2
+    return get_approval(constituents_list), to_play, tax_rate, tax_revenue, spending_level, year + 2, debt
 
 
 def main():
@@ -201,30 +204,35 @@ def main():
     for constituent in constituents_list:
         total_income += constituent.income
     print()
-    print("You are taking on the role of a member of the U.S. House of Representatives, serving")
-    print("two-year terms. You are tasked with crafting the discretionary part of the federal")
-    print("budget. Listen to your constituents and create a budget that meets the need of the most")
-    print("people, and try to get re-elected as many times as you can!")
+    print("Welcome to the U.S. House of Representatives. An important part of your many duties is crafting the federal budget. The vast")
+    print("majority of the federal budget goes towards mandatory spending, and some goes towards paying interest on the national ")
+    print("debt. But about 1/3 of it is for discretionary spending, where you must balance revenue and spending on many issues, from ")
+    print("the military to health. You must listen to your constituents, and create a budget that satisfies the most people.")
+    print()
+    print("Beware: if a constituent does not care about a specific issue, then they are NOT willing to pay higher taxes. Also, don't be")
+    print("tempted by the option to always borrow money instead of raising taxes. If the national debt (which increases from borrowing)")
+    print("is higher at the end of the term than at the beginning, you will become 2% less popular among ALL constituents.")
+    print()
+    print("Try to get re-elected as many times as possible by keeping your constituents happy. Good luck!")
     print()
     input("Press enter when you are ready to begin. Good luck!\n").strip().upper()
     while approval >= 50.0 and len(to_play) > 0:
-        approval, to_play, tax_rate, tax_revenue, spending_level, year = turn(to_play, tax_rate, tax_revenue,
+        approval, to_play, tax_rate, tax_revenue, spending_level, year, debt = turn(to_play, tax_rate, tax_revenue,
                                                                               spending_level, constituents_list,
-                                                                              constituents_who_care, year, total_income)
+                                                                              constituents_who_care, year, total_income, 0)
         if approval >= 50.0 and len(to_play) > 0:
             print("Congratulations! You were re-elected in the", year, "election. Time to work on solving more issues!")
             time.sleep(2.5)
         elif len(to_play) > 0:
             print(
-                "You raised taxes too high or did not tend to the issues your constituents care about, so you were not re-elected in the",
+                "You raised taxes too high, increased the national debt too much, or did not tend to the issues your constituents care about, so you were not re-elected in the",
                 year, "election.")
             print("You only received", str(approval) + "% of the vote. Here are your final results: ")
         else:  # ran out of scenarios
             print(
                 "You've addressed all of the issues we have so far...good job! Check back later for more! Here are your final results: ")
-    # print("The deficit (revenue - spending) is:", "$" + "{:,}".format(tax_revenue - spending_level))  #############################################################################################################################################################################SPECIAL CASE IF IT IS NEGATIVE
-    print("The tax rate is", str(tax_rate) + "% and the total tax revenue is",
-          "$" + "{:,}".format(int(0.01 * tax_rate * total_income)))
+    print("The tax rate is", str(tax_rate) + "% and the national debt is",
+          "$" + "{:,}".format(int(debt)))
     print()
     print("Thank you for your service in Congress, Representative", name + "!")
 
