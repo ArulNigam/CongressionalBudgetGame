@@ -1,6 +1,6 @@
 # Name: Arul Nigam
 # Date: 04 April 2020
-# v.4.4.20
+# v.4.6.20
 
 ######################################
 ## This game is designed to teach   ##
@@ -18,7 +18,7 @@ import random, time
 
 class Constituent:
     def __init__(self):
-        self.happiness = random.randint(50, 52)
+        self.happiness = random.randint(51, 53)
         self.pronoun = random.choice(["his", "her"])
         self.income = 10000 * random.randint(3, 8)
         if random.random() < 0.25:
@@ -69,16 +69,16 @@ class Constituent:
 
 
 def generate_scenarios(constituents_who_care):
-    possible_scenarios = {"Military": [["The Department of Defense wants to purchase new F-35 fighter jets for the Air Force.", 2, 3],
-                                      ["The Department of Defense wants to expand nuclear research.", 5, 1],
-                                      ["The intelligence community wants to develop new cryptography tools.", 5, 2]],
-                             "Space": [["NASA is planning to send 4 astronauts to the moon in the next 5 years.", 6, 7],
-                                      ["The President wants to create a new branch of the armed forces, called the Space Force.", 3, 3]],
-                            "Health": [["The Department of Health and Human Services needs to purchase medical protection masks.", 2, 4],
-                                      ["The Center for Disease Control and Prevention wants to research vaccines for common diseases.", 3, 3]],
-                           "Housing": [["The Department of Housing and Urban Development wants to expand affordable housing options for Americans.", 2, 1]],
-                            "Energy": [["The Department of Energy wants to research solar energy.", 2, 5]],
-                          "Veterans": [["The Department of Veterans' Affairs wants to build new hospitals for veterans.", 3, 6]]}
+    possible_scenarios = {"Military": [["The Department of Defense wants to purchase new F-35 fighter jets for the Air Force.", 3, 3],
+                                      ["The Department of Defense wants to expand nuclear research.", 4, 3],
+                                      ["The intelligence community wants to develop new cryptography tools.", 1, 2]],
+                             "Space": [["NASA is planning to send 4 astronauts to the moon in the next 5 years.", 6, 8],
+                                      ["The President wants to create a new branch of the armed forces, called the Space Force.", 5, 4]],
+                            "Health": [["The Department of Health and Human Services needs to purchase medical protection masks.", 2, 6],
+                                      ["The Center for Disease Control and Prevention wants to research vaccines for common diseases.", 4, 5]],
+                           "Housing": [["The Department of Housing and Urban Development wants to expand affordable housing options for Americans.", 5, 3]],
+                            "Energy": [["The Department of Energy wants to research solar energy.", 3, 5]],
+                          "Veterans": [["The Department of Veterans' Affairs wants to build new hospitals for veterans.", 4, 8]]}
     issues = []
     for i in constituents_who_care.keys():
         issues.append(i)
@@ -92,11 +92,12 @@ def generate_scenarios(constituents_who_care):
     return scenarios_list
 
 
-def get_approval(constituents):
-    happiness = 0
+def run_election(constituents):
+    votes = 0
     for constituent in constituents:
-        happiness += constituent.happiness
-    return round(happiness / len(constituents), 1)
+        if constituent.happiness >= 50.0:
+            votes += 100
+    return round(votes / len(constituents), 1)
 
 
 def get_constituents_who_care(issues, constituents):
@@ -166,18 +167,18 @@ def turn(to_play, tax_rate, tax_revenue, spending_level, constituents_list, cons
                 for constituent in constituents_list:
                     if constituent in constituents_who_care[issue]:
                         constituent.happiness += benefit
-        if debt > initial_debt:
-            for constituent in constituents_list:
-                constituent.happiness -= 1.5
         scenarios_done += 1
         print("--------------------------------------------------------------------------------------------------")
-    return get_approval(constituents_list), to_play, tax_rate, tax_revenue, spending_level, year + 2, debt
+    if debt > initial_debt:
+        for constituent in constituents_list:
+            constituent.happiness -= 5.0
+    return run_election(constituents_list), to_play, tax_rate, tax_revenue, spending_level, year + 2, debt
 
 
 def main():
     print("[Congressional Budget Game]")
     print("        [Arul Nigam]")
-    print("         [v4.4.20]")
+    print("         [v4.6.20]")
     print()
     name = ""
     while name == "":
@@ -213,13 +214,14 @@ def main():
     print()
     print("Beware: if a constituent does not care about a specific issue, then they are NOT willing to pay higher taxes. Also, don't be")
     print("tempted by the option to always borrow money instead of raising taxes. If the national debt (which increases from borrowing)")
-    print("is higher at the end of the term than at the beginning, you will become 1.5% less popular among ALL constituents.")
+    print("is higher at the end of the term than at the beginning, you will become 5.0% less popular among ALL constituents.")
     print()
     print("Try to get re-elected as many times as possible by keeping your constituents happy. Good luck!")
     print()
     input("Press enter when you are ready to begin. Good luck!\n").strip().upper()
+    debt = 0
     while approval >= 50.0 and len(to_play) > 0:
-        approval, to_play, tax_rate, tax_revenue, spending_level, year, debt = turn(to_play, tax_rate, tax_revenue, spending_level, constituents_list, constituents_who_care, year, total_income, 0)
+        approval, to_play, tax_rate, tax_revenue, spending_level, year, debt = turn(to_play, tax_rate, tax_revenue, spending_level, constituents_list, constituents_who_care, year, total_income, debt)
         if approval >= 50.0 and len(to_play) > 0:
             print("Congratulations! You were re-elected in the", year, "election. Time to work on solving more issues!")
             time.sleep(2.5)
